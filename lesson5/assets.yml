@@ -1,0 +1,30 @@
+# Deck
+dealing: "Dealing to"
+
+# Card
+of: "of"
+heart: "♥"
+diamond: "♦"
+club: "♣"
+spade: "♠"
+
+# Player
+decision: "Enter your decision:"
+hit: "hit"
+stay: "stay"
+score: "score"
+busts: "busts."
+stays: "stays."
+hits: "hits."
+
+# Dealer
+dealer: "Dealer: "
+
+# Hand
+hand: "Hand"
+empty: 'Empty'
+total: "Total:"
+hidden: "HIDDEN"
+and: 'and'
+
+wait_user: "Enter anything to continue."
