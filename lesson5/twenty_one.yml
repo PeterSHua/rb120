@@ -1,0 +1,61 @@
+rules: |
+  Twenty One is a stripped down version of Blackjack. Just as in Blackjack,
+  the goal of this game is to get as close as 21 as possible without going over.
+
+  Rules:
+  - You will play against the Dealer.
+  - Starting with you, each player is dealt two cards.
+  - You can see your cards, but may only see the Dealer's first card.
+    The Dealer's second card (the hole card) is hidden from you.
+  - The value of each player's hand is the sum of all cards in their hand.
+  - Cards 2-10 are worth their face value.
+  - Jack, Queen, King are worth 10.
+  - Ace may be worth 1 or 11, depending on which value is favourable to the
+    player. Meaning that the Ace is worth 1 if the player's hand would have
+    exceeded 21 with a high ace.
+  - Hit means the player asks to be dealt another card.
+  - Stay means the player choses to finishes their turn.
+  - Bust means the player's hand exceeds 21.
+
+  Order of Play:
+  - You are dealt a card.
+  - Dealer is dealt a card.
+  - You are dealt a card
+  - Dealer is dealt a card (hidden).
+  - If you have a hand worth 21, you win, unless the Dealer also has a
+    hand worth 21. If both players have 21, the round ends in a tie.
+  - You may decide to hit until you decide to stay, or if you bust.
+    You loses the round if you bust.
+  - Dealer hits until 17 or greater, or if they bust.
+    Dealer loses the round if they bust.
+  - The highest hand wins if no one has busted, and all players have stood.
+  - The round is tied if the hands are worth an equal value.
+  - The player who first wins 5 rounds is declared the winner of the game.
+
+your_name: "Welcome to Twenty One! Please enter your name."
+valid_name: "Sorry, your name must contain only letters."
+begin: "Enter rules to see how the game works. Enter anything else if you want to start playing!"
+invalid_choice: "Please enter a valid choice."
+decision: "Enter your decision:"
+hits: "hits."
+hit: "hit"
+stay: "stay"
+of: "of"
+hand: "Hand"
+empty: 'Empty'
+total: "Total:"
+dealer: "Dealer"
+win_round: "wins the round."
+win_game: "wins the game!"
+busts: "busts."
+stays: "stays."
+heart: "♥"
+diamond: "♦"
+club: "♣"
+spade: "♠"
+score: "score"
+hidden: "HIDDEN"
+dealing: "Dealing to"
+wait_user: "Enter anything to continue."
+tie: "Round is tied."
+again: "Play again? Enter yes or no."
