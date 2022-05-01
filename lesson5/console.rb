@@ -1,12 +1,8 @@
 module Console
-  require 'yaml'
-
-  MSGS = YAML.load_file('twenty_one.yml')
-
   # Enforces the user to enter an input that matches a regex in a given regex
   # array. Returns the regex that matched.
-  def req_from_rgx_list(msg, rgx_arr)
-    prompt(msg)
+  def req_from_rgx_list(prompt_msg, rgx_arr, error_msg)
+    prompt(prompt_msg)
 
     loop do
       user_input = gets.chomp
@@ -17,14 +13,14 @@ module Console
         return rgx if user_input =~ rgx
       end
 
-      prompt(MSGS['invalid_choice'])
+      prompt(error_msg)
     end
   end
 
   # Returns true when the input from the user matches true_rgx.
   # Returns false when the input from the user matches false_rgx.
-  def bool_choice(msg, true_rgx, false_rgx)
-    rgx = req_from_rgx_list(msg, [true_rgx, false_rgx])
+  def bool_choice(prompt_msg, true_rgx, false_rgx, error_msg)
+    rgx = req_from_rgx_list(prompt_msg, [true_rgx, false_rgx], error_msg)
 
     if rgx == true_rgx
       true
@@ -33,9 +29,8 @@ module Console
     end
   end
 
-  def wait_user
-    msg = MSGS['wait_user']
-    req_from_rgx_list(msg, [])
+  def wait_user(msg)
+    req_from_rgx_list(msg, [], "")
   end
 
   def prompt(msg)

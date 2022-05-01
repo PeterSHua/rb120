@@ -1,4 +1,8 @@
+require 'yaml'
+
 module Assets
+  MSGS = YAML.load_file('assets.yml')
+
   class Deck
     include Console
 
@@ -19,7 +23,7 @@ module Assets
       prompt "#{MSGS['dealing']} #{player.name}..."
 
       card = rand_card
-      player.update_hand(card)
+      player.hand.add(card)
 
       card
     end
@@ -72,7 +76,7 @@ module Assets
         prompt("#{head} #{MSGS['of']} #{MSGS[suit]}")
       end
 
-      wait_user
+      wait_user(MSGS['wait_user'])
       clear_screen
     end
 
@@ -84,22 +88,12 @@ module Assets
   class Player
     include Console
 
-    BLACKJACK = 21
-
-    attr_reader :hand, :score, :name, :total_sum
+    attr_reader :hand, :scoreboard, :name
 
     def initialize(name)
-      self.score = 0
+      self.scoreboard = Scoreboard.new
       self.name = name
-      reset_hand
-    end
-
-    def reset_hand
-      self.hand = []
-      self.total_sum = 0
-      self.ace_count = 0
-      self.non_ace_sum = 0
-      self.ace_sum = 0
+      self.hand = Hand.new
     end
 
     def dealer?
@@ -107,7 +101,7 @@ module Assets
     end
 
     def stay?
-      return true if blackjack?
+      return true if hand.blackjack?
 
       options = [MSGS['hit'], MSGS['stay']]
       msg = "#{MSGS['decision']} #{joinor(options)}"
@@ -115,12 +109,69 @@ module Assets
       hit_rgx = /^[\sh]/i
       stay_rgx = /^[\ss]/i
 
-      stay = bool_choice(msg, stay_rgx, hit_rgx)
-      prompt "#{name} #{MSGS['stays']}" if stay
+      bool_choice(msg, stay_rgx, hit_rgx, msg)
+    end
 
-      wait_user
+    def print_busted
+      prompt("#{name} #{MSGS['busts']}")
+      wait_user(MSGS['wait_user'])
+    end
 
-      stay
+    def print_stood
+      prompt("#{name} #{MSGS['stays']}")
+      wait_user(MSGS['wait_user'])
+    end
+
+    def print_hit
+      prompt("#{name} #{MSGS['hits']}")
+      wait_user(MSGS['wait_user'])
+    end
+
+    private
+
+    attr_accessor :ace_count, :non_ace_sum, :ace_sum
+    attr_writer :hand, :scoreboard, :name
+  end
+
+  class Dealer < Player
+    HOUSE_RULE = 17
+    NAMES = %w(Chico Harpo Groucho Gummo Zeppo)
+
+    def initialize
+      super(NAMES.sample)
+    end
+
+    def stay?
+      hand.total_sum >= HOUSE_RULE
+    end
+  end
+
+  class Hand
+    include Console
+
+    BLACKJACK = 21
+    HOLE = 2
+
+    attr_reader :cards, :total_sum, :ace_count, :non_ace_sum, :ace_sum
+
+    def initialize
+      reset
+    end
+
+    def reset
+      self.cards = []
+      self.total_sum = 0
+      self.ace_count = 0
+      self.non_ace_sum = 0
+      self.ace_sum = 0
+    end
+
+    def hole?
+      cards.count == HOLE
+    end
+
+    def next_hole?
+      cards.count == HOLE - 1
     end
 
     def busted?
@@ -132,8 +183,8 @@ module Assets
     end
 
     # rubocop: disable Metrics/AbcSize
-    def update_hand(card)
-      hand << card
+    def add(card)
+      cards << card
 
       self.non_ace_sum += card.head if Card::FACELESS.include?(card.head)
       self.non_ace_sum += Card::FACE_VALUE if Card::FACES.include?(card.head)
@@ -145,38 +196,12 @@ module Assets
     end
     # rubocop: enable Metrics/AbcSize
 
-    def reset_score
-      self.score = 0
-    end
-
-    def update_score
-      self.score += 1
-    end
-
-    def print_score
-      puts "#{name} (#{MSGS['score']}: #{score})"
-    end
-
-    # The dealer's second card is hidden until it's their turn
-    def mask_hand(mask = false, mask_idx = nil)
-      cards = hand.dup
-
-      if dealer? && hole? && mask
-        cards[mask_idx] = MSGS['hidden']
-        sum = MSGS['hidden']
-      else
-        sum = total_sum
-      end
-
-      [cards, sum]
-    end
-
-    def print_hand_total(mask = false, mask_idx = nil)
-      cards, sum = mask_hand(mask, mask_idx)
+    def print(mask = false)
+      cards, sum = hide(mask)
       cards = if cards.empty?
                 MSGS['empty']
               else
-                joinor(cards, ', ', 'and')
+                joinor(cards, ', ', MSGS['and'])
               end
 
       puts "#{MSGS['hand']}: #{cards}"
@@ -185,8 +210,21 @@ module Assets
 
     private
 
-    attr_accessor :ace_count, :non_ace_sum, :ace_sum
-    attr_writer :hand, :score, :name, :total_sum
+    attr_writer :cards, :total_sum, :ace_count, :non_ace_sum, :ace_sum
+
+    # The dealer's second card is hidden until it's their turn
+    def hide(mask = false)
+      dup_cards = cards.dup
+
+      if hole? && mask
+        dup_cards[HOLE - 1] = MSGS['hidden']
+        sum = MSGS['hidden']
+      else
+        sum = total_sum
+      end
+
+      [dup_cards, sum]
+    end
 
     # Returns the sum of aces in the player's hand.
     # Aces may have a value of 1 or 11, but there may only be one ace with a
@@ -216,36 +254,27 @@ module Assets
     end
   end
 
-  class Dealer < Player
-    HOUSE_RULE = 17
-    HOLE = 2
-    NAMES = %w(Chico Harpo Groucho Gummo Zeppo)
+  class Scoreboard
+    attr_reader :points
 
     def initialize
-      super(NAMES.sample)
+      reset
     end
 
-    def stay?
-      if total_sum >= HOUSE_RULE
-        prompt("#{name} #{MSGS['stays']}")
-        true
-      else
-        prompt("#{name} #{MSGS['hits']}")
-        false
-      end
+    def reset
+      self.points = 0
     end
 
-    def hole?
-      hand.count == HOLE
+    def increment
+      self.points += 1
     end
 
-    def next_hole?
-      hand.count == HOLE - 1
+    def print(name)
+      puts "#{name} (#{MSGS['score']}: #{points})"
     end
 
-    def print_score
-      print "Dealer: "
-      super
-    end
+    private
+
+    attr_writer :points
   end
 end
